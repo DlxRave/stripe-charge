@@ -7,15 +7,24 @@ from html import unescape
 
 app = Flask(__name__)
 
-@app.route('/donate', methods=['POST'])
+@app.route('/donate', methods=['GET', 'POST'])
 def donate():
+    
+    if request.is_json:
+        input_data = request.json
+    else:
+        
+        input_data = request.args.to_dict()
 
-    input_data = request.json
+    if not input_data or 'number' not in input_data:
+        return jsonify({"status": "error", "message": "Eksik parametre! Örn: /donate?number=...&cvc=...&exp_month=...&exp_year=..."})
+
     f = Faker()
     email = f.email()
     name = f.name()
     u = generate_user_agent()
     r = requests.Session()
+
 
     
     headers = {
@@ -182,7 +191,7 @@ def donate():
         xxxp = re.sub(r'<[^>]+>', '', xxp.group(0))
         msg = unescape(xxxp).strip()
     else:
-        xxxxp = re.search(r'Error:\s*([^<]+)', response_final)
+        xxxxp = re.search(r'Response:\s*([^<]+)', response_final)
         msg = xxxxp.group(1).strip() if xxxxp else "No error message found"
 
     return jsonify({
